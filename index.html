@@ -1,0 +1,176 @@
+
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    <title>NAS币价实时监控短信推送平台</title>
+    <link href="https://cdn.bootcss.com/weui/1.1.2/style/weui.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="./example.css"/>
+    <style type="text/css">
+        .price {
+            color:blue;
+        }
+    </style>
+</head>
+
+
+<body ontouchstart>
+    <div class="weui-toptips weui-toptips_warn js_tooltips">错误提示</div>
+
+    <div class="container" id="container"></div>
+
+    <script type="text/html" id="tpl_home">
+
+    <div class="page">
+        <div class="page__hd">
+            <h1 class="page__title">
+                <h1>NAS币价监控小程序</h1>
+            </h1>
+            <p class="page__desc">实时监控多个平台NAS价格, 并根据您设置的预警价格自动给您发通知短信</p>
+            <p class="page__desc">币安:<span id="binance_price" class="price">0</span> 火币:<span id="huobi_price" class="price">0</span> OKEX:<span id="okex_price" class="price">0</span>
+        </div>
+
+
+            <div class="weui-cells__title">监控的交易所(可多选)</div>
+            <div class="weui-cells weui-cells_checkbox">
+                <label class="weui-cell weui-check__label" for="checkbox_ex1">
+                    <div class="weui-cell__hd">
+                        <input type="checkbox" class="weui-check" name="checkbox_ex" id="checkbox_ex1" value="binance" checked="checked"/>
+                        <i class="weui-icon-checked"></i>
+                    </div>
+                    <div class="weui-cell__bd">
+                        <p>币安</p>
+                    </div>
+                </label>
+                <label class="weui-cell weui-check__label" for="checkbox_ex2">
+                    <div class="weui-cell__hd">
+                        <input type="checkbox" name="checkbox_ex" class="weui-check" id="checkbox_ex2" value="huobi"/>
+                        <i class="weui-icon-checked"></i>
+                    </div>
+                    <div class="weui-cell__bd">
+                        <p>火币</p>
+                    </div>
+                </label>
+                <label class="weui-cell weui-check__label" for="checkbox_ex3">
+                    <div class="weui-cell__hd">
+                        <input type="checkbox" name="checkbox_ex" class="weui-check" id="checkbox_ex3" value="okex"/>
+                        <i class="weui-icon-checked"></i>
+                    </div>
+                    <div class="weui-cell__bd">
+                        <p>OKEX</p>
+                    </div>
+                </label>
+            </div>
+
+            <div class="weui-cells__title">通知价格设置</div>
+            <div class="weui-cells weui-cells_form">
+                <div class="weui-cell">
+                    <div class="weui-cell__hd"><label class="weui-label">当价格高于</label></div>
+                    <div class="weui-cell__bd">
+                        <input class="weui-input" id="highprice" type="number" placeholder="元" required="" />
+                    </div>
+                </div>
+
+                <div class="weui-cell">
+                    <div class="weui-cell__hd"><label class="weui-label">当价格低于</label></div>
+                    <div class="weui-cell__bd">
+                        <input class="weui-input" id="lowprice" type="number" placeholder="元" required="" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="weui-cells__title">绑定手机号码</div>
+            <div class="weui-cells weui-cells_form">
+                <div class="weui-cell weui-cell_select weui-cell_select-before">
+                    <div class="weui-cell__hd">
+                        <select class="weui-select" name="select2">
+                            <option value="1">+86</option>
+                        </select>
+                    </div>
+                    <div class="weui-cell__bd">
+                        <input class="weui-input" type="number" pattern="[0-9]{11}" id="tel" placeholder="请输入您的手机号码" required="" />
+                    </div>
+                </div>
+            </div>
+            <div class="weui-btn-area">
+                <a class="weui-btn weui-btn_primary" href="javascript:submit()" id="submit">确定</a>
+            </div>
+
+    <div class="js_dialog" id="submitDialog" style="display: none;">
+        <div class="weui-mask"></div>
+        <div class="weui-dialog weui-skin_android">
+            <div class="weui-dialog__hd"><strong class="weui-dialog__title">提示</strong></div>
+            <div class="weui-dialog__bd"><span id="submitspan">
+                点击确定后将调用NAS钱包免费支付上链; 以后如需取消推送, 请将手机号留空重新支付一次即可</span>
+            </div>
+            <div class="weui-dialog__ft">
+                <a href="javascript:;" class="weui-dialog__btn weui-dialog__btn_default" onclick="javascript: $('#submitDialog').fadeOut(200);">取消</a>
+                <a href="javascript:;" class="weui-dialog__btn weui-dialog__btn_primary" onclick="pay();javascript: $('#submitDialog').fadeOut(200);">确定</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="js_dialog" id="removeDialog" style="display: none;">
+        <div class="weui-mask"></div>
+        <div class="weui-dialog weui-skin_android">
+            <div class="weui-dialog__hd"><strong class="weui-dialog__title">警告</strong></div>
+            <div class="weui-dialog__bd">
+                您没有填写手机号, 支付成功后系统将不再向您的支付地址绑定的手机推送消息, 点击确定继续
+            </div>
+            <div class="weui-dialog__ft">
+                <a href="javascript:;" class="weui-dialog__btn weui-dialog__btn_default" onclick="javascript: $('#removeDialog').fadeOut(200);">取消</a>
+                <a href="javascript:;" class="weui-dialog__btn weui-dialog__btn_primary" onclick="remove();javascript: $('#removeDialog').fadeOut(200);">确定</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="js_dialog" id="alertDialog" style="display: none;">
+        <div class="weui-mask"></div>
+        <div class="weui-dialog">
+            <div class="weui-dialog__bd"><span id="alert_content"></span></div>
+            <div class="weui-dialog__ft">
+                <a href="javascript:;" class="weui-dialog__btn weui-dialog__btn_primary" id="ok_btn">知道了</a>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="loadingToast" style="display:none;">
+        <div class="weui-mask_transparent"></div>
+        <div class="weui-toast">
+            <i class="weui-loading weui-icon_toast"></i>
+            <p class="weui-toast__content"><span id="showdaojishi">请稍等 (<span id="daojishi"></span>)</span></p>
+        </div>
+    </div>
+
+
+</div>
+
+        <div class="weui-msg__extra-area">
+            <div class="weui-footer">
+                <p class="weui-footer__links">
+                    <a href="" class="weui-footer__link">Github</a> | 
+                    <a href="javascript:mailto('947270280@qq.com');" class="weui-footer__link">联系我们</a>
+                </p>
+                <p class="weui-footer__text">Copyright &copy; 2018 NAS币价监控平台</p>
+            </div>
+        </div>
+
+
+</script>
+</script>
+    <script src="./zepto.min.js"></script>
+    <script type="text/javascript" src="https://res.wx.qq.com/open/js/jweixin-1.0.0.js"></script>
+    <script src="https://res.wx.qq.com/open/libs/weuijs/1.0.0/weui.min.js"></script>
+    <script src="./example.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nebulas@0.5.2/dist/nebulas.js"></script>
+    <script src="./js/nebPay.js"></script>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+    <script src="./app.js"></script>
+</body>
+</html>
+
+<script type="text/javascript">
+
+</script>
